@@ -1,0 +1,40 @@
+#!/bin/sh
+
+escape() { 
+    echo "$1" | sed 's/\([\.\$\*]\)/\\\1/g'
+}
+
+warn() {
+    echo "$@" >&2;
+}
+
+die() { 
+    warn "$@"
+    exit 1
+}
+
+has() {
+    local item=$1
+    shift
+    echo "searching for $item in $@"
+    echo " $@ " | grep -q " $(escape $item) "
+}
+
+git_local_branches() { 
+    git branch --no-color | sed 's/^[* ] //'
+}
+
+git_is_clean_working_tree() {
+    if [ ! git diff --no-ext-diff --ignore-submodules --quiet --exit-code ]; then
+       return 1
+    fi
+    if [ ! git diff-index --cached --quiet --ignore-submodules HEAD -- ]; then
+       return 2
+    fi
+    return 0
+}
+
+main() {
+}
+
+main "$@"
