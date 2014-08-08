@@ -16,7 +16,6 @@ die() {
 has() {
     local item=$1
     shift
-    echo "searching for $item in $@"
     echo " $@ " | grep -q " $(escape $item) "
 }
 
@@ -34,7 +33,25 @@ git_is_clean_working_tree() {
     return 0
 }
 
+usage() {
+    echo "usage: sing <subcommand>"
+    echo "available subcommands:"
+}
+
 main() {
+    if ! git rev-parse --git-dir >/dev/null 2>&1; then
+	die "fatal: Not a git repository"
+    fi
+
+    MASTER="master"
+    if ! has $MASTER $(git_local_branches); then
+	die "fatal: branch $MASTER not found"
+    fi
+    
+    if test $# -eq 0; then
+	usage
+	die
+    fi
 }
 
 main "$@"
