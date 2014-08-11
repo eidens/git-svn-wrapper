@@ -33,10 +33,6 @@ svn_rebase() {
 }
 
 cmd_update() {
-    init
-
-    CURRENT="$(git_current_branch)"
-    
     if test "$CURRENT" = "$MASTER"; then
 	svn_rebase
     else
@@ -59,7 +55,9 @@ main() {
 	die "error: Not a git repository"
     fi
 
+    CURRENT="$(git_current_branch)"
     MASTER="master"
+
     if ! has $MASTER $(git_local_branches); then
 	die "error: branch $MASTER not found"
     fi
