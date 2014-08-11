@@ -23,32 +23,43 @@ git_local_branches() {
     git branch --no-color | sed 's/^[* ] //'
 }
 
-git_is_clean_working_tree() {
-    if [ ! git diff --no-ext-diff --ignore-submodules --quiet --exit-code ]; then
-       return 1
-    fi
-    if [ ! git diff-index --cached --quiet --ignore-submodules HEAD -- ]; then
-       return 2
-    fi
-    return 0
-}
-
 usage() {
     echo "usage: sing <subcommand>"
     echo "available subcommands:"
 }
 
 main() {
+    # basic sanity checks
     if ! git rev-parse --git-dir >/dev/null 2>&1; then
-	die "fatal: Not a git repository"
+	die "error: Not a git repository"
     fi
 
     MASTER="master"
     if ! has $MASTER $(git_local_branches); then
-	die "fatal: branch $MASTER not found"
+	die "error: branch $MASTER not found"
+    fi
+    
+    if ! git diff --no-ext-diff --ignore-submodules --quiet --exit-code; then
+	die "error: working tree contains unstaged changes, aborting"
+    fi
+
+    if ! git diff-index HEAD --ignore-submodules --quiet --exit-code; then
+	die "error: index contains uncommited changes, aborting"
     fi
     
     if test $# -eq 0; then
+	usage
+	die
+    fi
+
+    # delegate to subcommands
+    # save first subcommand and remove it from the given arguments 
+    SUBCOMMAND="$1"
+    shift
+    
+    cmd_$SUBCOMMAND "$@"
+    
+    if test $? -eq 127; then
 	usage
 	die
     fi
