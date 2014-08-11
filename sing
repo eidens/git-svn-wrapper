@@ -23,6 +23,10 @@ git_local_branches() {
     git branch --no-color | sed 's/^[* ] //'
 }
 
+git_current_branch() {
+	git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'
+}
+
 svn_rebase() {
     echo "git svn rebase"
     git svn rebase
