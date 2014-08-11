@@ -23,6 +23,27 @@ git_local_branches() {
     git branch --no-color | sed 's/^[* ] //'
 }
 
+svn_rebase() {
+    echo "git svn rebase"
+    git svn rebase
+}
+
+cmd_update() {
+    init
+
+    CURRENT="$(git_current_branch)"
+    
+    if test "$CURRENT" = "$MASTER"; then
+	svn_rebase
+    else
+	git checkout "$MASTER"	    
+	svn_rebase
+
+	git checkout "$CURRENT"
+	git rebase "$MASTER"
+    fi
+}
+
 usage() {
     echo "usage: sing <subcommand>"
     echo "available subcommands:"
