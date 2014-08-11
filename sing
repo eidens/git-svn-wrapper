@@ -19,46 +19,66 @@ has() {
     echo " $@ " | grep -q " $(escape $item) "
 }
 
-git_local_branches() { 
+local_branches() { 
     git branch --no-color | sed 's/^[* ] //'
 }
 
-git_current_branch() {
+current_branch() {
 	git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'
+}
+
+checkout() {
+    echo "git checkout $1"
+    git checkout "$1" || die
+}
+
+rebase() {
+    echo "git rebase $1"
+    git rebase "$1" || die
 }
 
 svn_rebase() {
     echo "git svn rebase"
-    git svn rebase
+    git svn rebase || die
 }
 
 cmd_update() {
     if test "$CURRENT" = "$MASTER"; then
 	svn_rebase
     else
-	git checkout "$MASTER"	    
+	checkout "$MASTER"	    
 	svn_rebase
 
-	git checkout "$CURRENT"
-	git rebase "$MASTER"
+	checkout "$CURRENT"
+	rebase "$MASTER"
     fi
 }
 
 usage() {
     echo "usage: sing <subcommand>"
-    echo "available subcommands:"
+    echo "available subcommands: update - first rebases '$MASTER' on the SVN head revision, then the current branch on '$MASTER'"
 }
 
 main() {
+    CURRENT="$(current_branch)"
+    MASTER="master"
+
     # basic sanity checks
+    if test $# -eq 0; then
+	usage
+	die
+    fi
+
+    if test "$1" = "usage"; then
+	usage
+	exit 0
+    fi
+
     if ! git rev-parse --git-dir >/dev/null 2>&1; then
 	die "error: Not a git repository"
     fi
 
-    CURRENT="$(git_current_branch)"
-    MASTER="master"
-
-    if ! has $MASTER $(git_local_branches); then
+    if ! has $MASTER $(local_branches); then
 	die "error: branch $MASTER not found"
     fi
     
@@ -70,11 +90,6 @@ main() {
 	die "error: index contains uncommited changes, aborting"
     fi
     
-    if test $# -eq 0; then
-	usage
-	die
-    fi
-
     # delegate to subcommands
     # save first subcommand and remove it from the given arguments 
     SUBCOMMAND="$1"
