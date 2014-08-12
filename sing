@@ -32,6 +32,11 @@ checkout() {
     git checkout "$@" || die
 }
 
+branch() {
+    echo "git branch $@"
+    git branch "$@" || die
+}
+
 rebase() {
     echo "git rebase $@"
     git rebase "$@" || die
@@ -54,6 +59,26 @@ cmd_update() {
     fi
 }
 
+cmd_start() {
+    require_args "$@"
+    
+    NEW="$1"
+    if has $NEW $(local_branches); then
+	checkout $NEW
+    else
+	checkout $MASTER
+	svn_rebase
+	branch $NEW
+    fi
+}
+
+require_args() {
+    if test $# -eq 0; then
+	usage
+	die
+    fi
+}
+
 usage() {
     echo "usage: sing <subcommand>"
     echo "available subcommands: update - first rebases '$MASTER' on the SVN head revision, then the current branch on '$MASTER'"
@@ -64,10 +89,7 @@ main() {
     MASTER="master"
 
     # basic sanity checks
-    if test $# -eq 0; then
-	usage
-	die
-    fi
+    require_args "$@"
 
     if test "$1" = "usage"; then
 	usage
