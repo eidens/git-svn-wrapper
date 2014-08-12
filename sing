@@ -33,17 +33,16 @@ current_branch() {
 
 checkout() {
     TARGET="$1"
-    if test "$TARGET" = "$CURRENT"; then
+    if test "$TARGET" = "$(current_branch)"; then
 	info "already on branch $TARGET, not checking out"
     else
 	git checkout "$TARGET" || die
-	CURRENT=$TARGET
     fi
 }
 
 branch() {
     NEW="$1"
-    if test "$NEW" = "$CURRENT" || has $NEW $(local_branches); then
+    if test "$NEW" = "$(current_branch)" || has $NEW $(local_branches); then
 	info "$NEW already exits, not branching"
     else
 	git branch "$@" || die
@@ -51,8 +50,9 @@ branch() {
 }
 
 rebase() {
-    if test "$1" = "$CURRENT"; then
-	info "already on branch $1, not rebasing"
+    UPSTREAM="$1"
+    if test "$UPSTREAM" = "$(current_branch)"; then
+	info "already on branch $UPSTREAM, not rebasing"
     else
 	git rebase "$@" || die
     fi
@@ -67,7 +67,7 @@ cmd_update() {
     checkout "$MASTER"	    
     svn_rebase
 
-    checkout "$CURRENT"
+    checkout "$INITIAL"
     rebase "$MASTER"
 }
 
@@ -94,7 +94,7 @@ usage() {
 }
 
 main() {
-    CURRENT="$(current_branch)"
+    INITIAL="$(current_branch)"
     MASTER="master"
 
     # basic sanity checks
