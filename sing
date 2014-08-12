@@ -4,6 +4,10 @@ escape() {
     echo "$1" | sed 's/\([\.\$\*]\)/\\\1/g'
 }
 
+info() {
+    echo "$@";
+}
+
 warn() {
     echo "$@" >&2;
 }
@@ -28,35 +32,35 @@ current_branch() {
 }
 
 checkout() {
-    if test "$1" != "$CURRENT"; then
-	echo "git checkout $@"
-	git checkout "$@" || die
+    TARGET="$1"
+    if test "$TARGET" = "$CURRENT"; then
+	info "already on branch $TARGET, not checking out"
     else
-	echo "already on branch $1, not checking out"
+	git checkout "$TARGET" || die
+	CURRENT=$TARGET
     fi
 }
 
 branch() {
-    if test "$1" != "$CURRENT"; then
-	echo "git branch $@"
-	git branch "$@" || die
+    NEW="$1"
+    if test "$NEW" = "$CURRENT" || has $NEW $(local_branches); then
+	info "$NEW already exits, not branching"
     else
-	echo "already on branch $1, not branching"
+	git branch "$@" || die
     fi
 }
 
 rebase() {
-    if test "$1" != "$CURRENT"; then
-	echo "git rebase $@"
-	git rebase "$@" || die
+    if test "$1" = "$CURRENT"; then
+	info "already on branch $1, not rebasing"
     else
-	echo "already on branch $1, not rebasing"
+	git rebase "$@" || die
     fi
 }
 
 svn_rebase() {
-    echo "git svn rebase $@"
-    git svn rebase "$@" || die
+    info "git svn rebase $@"
+#    git svn rebase "$@" || die
 }
 
 cmd_update() {
@@ -124,6 +128,7 @@ main() {
     
     cmd_$SUBCOMMAND "$@"
     
+    # unknown subcommand
     if test $? -eq 127; then
 	usage
 	die
