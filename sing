@@ -28,18 +28,30 @@ current_branch() {
 }
 
 checkout() {
-    echo "git checkout $@"
-    git checkout "$@" || die
+    if test "$1" != "$CURRENT"; then
+	echo "git checkout $@"
+	git checkout "$@" || die
+    else
+	echo "already on branch $1, not checking out"
+    fi
 }
 
 branch() {
-    echo "git branch $@"
-    git branch "$@" || die
+    if test "$1" != "$CURRENT"; then
+	echo "git branch $@"
+	git branch "$@" || die
+    else
+	echo "already on branch $1, not branching"
+    fi
 }
 
 rebase() {
-    echo "git rebase $@"
-    git rebase "$@" || die
+    if test "$1" != "$CURRENT"; then
+	echo "git rebase $@"
+	git rebase "$@" || die
+    else
+	echo "already on branch $1, not rebasing"
+    fi
 }
 
 svn_rebase() {
@@ -48,33 +60,19 @@ svn_rebase() {
 }
 
 cmd_update() {
-    if test "$CURRENT" = "$MASTER"; then
-	svn_rebase
-    else
-	checkout "$MASTER"	    
-	svn_rebase
+    checkout "$MASTER"	    
+    svn_rebase
 
-	checkout "$CURRENT"
-	rebase "$MASTER"
-    fi
+    checkout "$CURRENT"
+    rebase "$MASTER"
 }
 
 cmd_start() {
     require_args "$@"
     
     NEW="$1"
-    if test "$NEW" = "$CURRENT"; then
-	echo "already on branch $NEW"
-	exit 0
-    fi
-
-    if ! has $NEW $(local_branches); then
-	if test "$CURRENT" != "$MASTER"; then
-	    checkout $MASTER
-	fi
-	svn_rebase
-	branch $NEW
-    fi
+    checkout $MASTER
+    branch $NEW
     checkout $NEW
 }
 
