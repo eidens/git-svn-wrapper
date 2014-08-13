@@ -131,6 +131,7 @@ usage() {
     echo "usage: sing <subcommand>"
     echo "available subcommands: update - first rebases '$MASTER' on the SVN head revision, then the current branch on '$MASTER'"
     echo "                       start <branchname> - checkout <branchname> (if it doesn't exist branch it from the SVN head revision)"
+    echo "                       finish <branchname> - merges <branchname> into '$MASTER', then svn-dcommits from there. finally <branchname> is tagged as 'archive/<branchname>' and deleted"
 }
 
 main() {
