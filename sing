@@ -58,12 +58,36 @@ rebase() {
     fi
 }
 
+merge() {
+    OTHER="$1"
+    if test "$OTHER" = "$(current_branch)"; then
+	info "already on branch $OTHER, not merging"
+    else
+	git merge "$@" || die
+    fi
+}
+
+archive() {
+    BRANCH="$1"
+    git tag "archive/$BRANCH" "$BRANCH" || die
+}
+
+delete() {
+    git branch -D "$1" || die
+}
+
 svn_rebase() {
     info "git svn rebase $@"
-#    git svn rebase "$@" || die
+    git svn rebase "$@" || die
+}
+
+svn_dcommit() {
+    info "git svn dcommit"
+    git svn dcommit --interactive || die
 }
 
 cmd_update() {
+    INITIAL="$(current_branch)"
     checkout "$MASTER"	    
     svn_rebase
 
@@ -80,6 +104,22 @@ cmd_start() {
     checkout $NEW
 }
 
+cmd_finish() {
+    require_args "$@"
+
+    COMPLETE="$1"
+    checkout $COMPLETE
+    cmd_update
+
+    checkout $MASTER
+    merge $COMPLETE
+    
+    svn_dcommit
+    
+    archive $COMPLETE
+    delete $COMPLETE
+}
+
 require_args() {
     if test $# -eq 0; then
 	usage
@@ -94,7 +134,6 @@ usage() {
 }
 
 main() {
-    INITIAL="$(current_branch)"
     MASTER="master"
 
     # basic sanity checks
