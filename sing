@@ -1,36 +1,31 @@
 #!/bin/sh
 
-escape() { 
-    echo "$1" | sed 's/\([\.\$\*]\)/\\\1/g'
-}
-
+# basic utils
 info() {
     echo "$@";
 }
-
-warn() {
-    echo "$@" >&2;
-}
-
 die() { 
-    warn "$@"
+    echo "$@" >&2;
     exit 1
 }
-
+escape() { 
+    echo "$1" | sed 's/\([\.\$\*]\)/\\\1/g'
+}
 has() {
     local item=$1
     shift
     echo " $@ " | grep -q " $(escape $item) "
 }
 
+# git queries
 local_branches() { 
     git branch --no-color | sed 's/^[* ] //'
 }
-
 current_branch() {
 	git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'
 }
 
+# git commands
 checkout() {
     TARGET="$1"
     if test "$TARGET" = "$(current_branch)"; then
@@ -39,7 +34,6 @@ checkout() {
 	git checkout "$TARGET" || die
     fi
 }
-
 branch() {
     NEW="$1"
     if test "$NEW" = "$(current_branch)" || has $NEW $(local_branches); then
@@ -48,7 +42,6 @@ branch() {
 	git branch "$@" || die
     fi
 }
-
 rebase() {
     UPSTREAM="$1"
     if test "$UPSTREAM" = "$(current_branch)"; then
@@ -57,7 +50,6 @@ rebase() {
 	git rebase "$@" || die
     fi
 }
-
 merge() {
     OTHER="$1"
     if test "$OTHER" = "$(current_branch)"; then
@@ -66,26 +58,25 @@ merge() {
 	git merge "$@" || die
     fi
 }
-
 archive() {
     BRANCH="$1"
     git tag "archive/$BRANCH" "$BRANCH" || die
 }
-
 delete() {
     git branch -D "$1" || die
 }
 
+# git-svn specific commands
 svn_rebase() {
     info "git svn rebase $@"
 #    git svn rebase "$@" || die
 }
-
 svn_dcommit() {
     info "git svn dcommit"
 #    git svn dcommit --interactive || die
 }
 
+# sing subcommands
 cmd_update() {
     # save the initial branch to switch back to it after updating MASTER
     INITIAL="$(current_branch)"
@@ -104,7 +95,6 @@ cmd_update() {
     # having cheap and local branches is still preferable.
     rebase "$MASTER"
 }
-
 cmd_start() {
     # dont know what to start without a branchname
     require_args "$@"
@@ -118,7 +108,6 @@ cmd_start() {
 
     checkout $NEW
 }
-
 cmd_finish() {
     require_args "$@"
     COMPLETE="$1"
