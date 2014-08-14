@@ -87,35 +87,58 @@ svn_dcommit() {
 }
 
 cmd_update() {
+    # save the initial branch to switch back to it after updating MASTER
     INITIAL="$(current_branch)"
+
+    # 'pull' changes from SVN into MASTER    
     checkout "$MASTER"	    
     svn_rebase
 
+    # then get them into the initial branch too
     checkout "$INITIAL"
+ 
+    # simply merging MASTER into INITIAL should cause headaches with 
+    # non-linear history once INITIAL is finished and dcommitted back to SVN,
+    # so better consistently rebase everything. 
+    # by that some of the benefits of using git are lost but
+    # having cheap and local branches is still preferable.
     rebase "$MASTER"
 }
 
 cmd_start() {
+    # dont know what to start without a branchname
     require_args "$@"
-    
     NEW="$1"
+    
+    # starting point is always MASTER
     checkout $MASTER
+
+    # this does nothing if NEW already exists
     branch $NEW
+
     checkout $NEW
 }
 
 cmd_finish() {
     require_args "$@"
-
     COMPLETE="$1"
+
     checkout $COMPLETE
+
+    # after this step MASTER (and therefore its corresponding SVN branch)
+    # are direct, linear ancestors of COMPLETE
     cmd_update
 
     checkout $MASTER
+
+    # this is guaranteed to be a fast-forward merge: 
+    # COMPLETE was just rebased onto MASTER
     merge $COMPLETE
     
+    # 'push' to upstream
     svn_dcommit
     
+    # clean up and it's done
     archive $COMPLETE
     delete $COMPLETE
 }
