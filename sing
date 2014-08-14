@@ -34,7 +34,7 @@ checkout() {
     git checkout "$1" || die
 }
 rebase() {
-    git rebase "$1" || die
+    git rebase "$@" || die
 }
 merge() {
     git merge "$@" || die
@@ -75,20 +75,24 @@ cmd_update() {
     # save the initial branch to switch back to it after updating MASTER
     INITIAL="$(current_branch)"
 
+    if test "$INITIAL" != "$MASTER"; then
+	checkout "$MASTER"	    
+    fi
+
     # 'pull' changes from SVN into MASTER    
-    checkout "$MASTER"	    
     svn_rebase
 
     # then get them into the initial branch too
-    checkout "$INITIAL"
- 
-    # simply merging MASTER into INITIAL should cause headaches with 
-    # non-linear history once INITIAL is finished and dcommitted back to SVN,
-    # so better consistently rebase everything. 
-    # by that some of the benefits of using git are lost but
-    # having cheap and local branches is still preferable.
-    rebase "$MASTER"
+    if test "$INITIAL" != "$MASTER"; then
+	# simply merging MASTER into INITIAL should cause headaches with 
+	# non-linear history once INITIAL is finished and dcommitted back to SVN,
+	# so better consistently rebase everything. 
+	# by that some of the benefits of using git are lost but
+	# having cheap and local branches is still preferable.
+	rebase "$MASTER" "$INITIAL"
+    fi
 }
+
 cmd_start() {
     # dont know what to start without a branchname
     require_args "$@"
