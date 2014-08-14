@@ -26,44 +26,38 @@ current_branch() {
 }
 
 # git commands
+
+# checkout, rebase, merge all exit with 0 if they're applied to the current branch,
+# so no need to explicitly check for that.
+# if they exit with something else better abort right then and there.
 checkout() {
-    TARGET="$1"
-    if test "$TARGET" = "$(current_branch)"; then
-	info "already on branch $TARGET, not checking out"
-    else
-	git checkout "$TARGET" || die
-    fi
-}
-branch() {
-    NEW="$1"
-    if test "$NEW" = "$(current_branch)" || has $NEW $(local_branches); then
-	info "$NEW already exits, not branching"
-    else
-	git branch "$@" || die
-    fi
+    git checkout "$1" || die
 }
 rebase() {
-    UPSTREAM="$1"
-    if test "$UPSTREAM" = "$(current_branch)"; then
-	info "already on branch $UPSTREAM, not rebasing"
-    else
-	git rebase "$@" || die
-    fi
+    git rebase "$1" || die
 }
 merge() {
-    OTHER="$1"
-    if test "$OTHER" = "$(current_branch)"; then
-	info "already on branch $OTHER, not merging"
-    else
-	git merge "$@" || die
-    fi
+    git merge "$@" || die
 }
+
+# let the user resolve it if something goes wrong here.
 archive() {
     BRANCH="$1"
     git tag "archive/$BRANCH" "$BRANCH" || die
 }
 delete() {
     git branch -D "$1" || die
+}
+
+branch() {
+    NEW="$1"
+    
+    # git will fail fast if NEW already exists
+    if test "$NEW" = "$(current_branch)" || has $NEW $(local_branches); then
+	info "$NEW already exits, not branching"
+    else
+	git branch "$@" || die
+    fi
 }
 
 # git-svn specific commands
@@ -159,7 +153,7 @@ main() {
     shift
 
     # no need to go any further if user only wants info on usage    
-    if test "$SUBCOMMAND" = "usage" || "$SUBCOMMAND" = "help"; then
+    if test "$SUBCOMMAND" = "usage" || test "$SUBCOMMAND" = "help"; then
 	usage
 	exit 0
     fi
