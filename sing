@@ -63,11 +63,11 @@ branch() {
 # git-svn specific commands
 svn_rebase() {
     info "git svn rebase $@"
-#    git svn rebase "$@" || die
+    git svn rebase "$@" || die
 }
 svn_dcommit() {
     info "git svn dcommit"
-#    git svn dcommit --interactive || die
+    git svn dcommit --interactive || die
 }
 
 # sing subcommands
@@ -75,14 +75,11 @@ cmd_update() {
     # save the initial branch to switch back to it after updating MASTER
     INITIAL="$(current_branch)"
 
-    if test "$INITIAL" != "$MASTER"; then
-	checkout "$MASTER"	    
-    fi
-
     # 'pull' changes from SVN into MASTER    
+    checkout "$MASTER"	    
     svn_rebase
 
-    # then get them into the initial branch too
+    # then get them into the initial branch too if it wasnt MASTER
     if test "$INITIAL" != "$MASTER"; then
 	# simply merging MASTER into INITIAL should cause headaches with 
 	# non-linear history once INITIAL is finished and dcommitted back to SVN,
@@ -108,26 +105,33 @@ cmd_start() {
 }
 cmd_finish() {
     require_args "$@"
-    COMPLETE="$1"
 
+    # if COMPLETE is not a branch it'll fail right here
+    COMPLETE="$1"
     checkout $COMPLETE
 
     # after this step MASTER (and therefore its corresponding SVN branch)
-    # are direct, linear ancestors of COMPLETE
+    # are direct, linear ancestors of COMPLETE.
     cmd_update
 
-    checkout $MASTER
+    if test "$COMPLETE" = "$MASTER"; then
+	# how to interpret 'finish MASTER'? it should not be deleted
+	# so just dcommit and do nothing else
+	svn_dcommit
+    else
+	checkout $MASTER
 
-    # this is guaranteed to be a fast-forward merge: 
-    # COMPLETE was just rebased onto MASTER
-    merge $COMPLETE
+	# this is guaranteed to be a fast-forward merge: 
+	# COMPLETE was just rebased onto MASTER
+	merge $COMPLETE
     
-    # 'push' to upstream
-    svn_dcommit
+	# 'push' to upstream
+	svn_dcommit
     
-    # clean up and it's done
-    archive $COMPLETE
-    delete $COMPLETE
+	# clean up and it's done
+	archive $COMPLETE
+	delete $COMPLETE
+    fi
 }
 
 require_args() {
