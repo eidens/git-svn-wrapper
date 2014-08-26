@@ -104,11 +104,12 @@ cmd_start() {
     checkout $NEW
 }
 cmd_finish() {
-    require_args "$@"
-
-    # if COMPLETE is not a branch it'll fail right here
-    COMPLETE="$1"
-    checkout $COMPLETE
+    if test $# -eq 0; then
+	COMPLETE="$(current_branch)"
+    else
+	COMPLETE="$1"
+	checkout $COMPLETE
+    fi
 
     # after this step MASTER (and therefore its corresponding SVN branch)
     # are direct, linear ancestors of COMPLETE.
@@ -145,7 +146,7 @@ usage() {
     echo "usage: sing <subcommand>"
     echo "available subcommands: update - first rebases '$MASTER' on the SVN head revision, then the current branch on '$MASTER'"
     echo "                       start <branchname> - checkout <branchname> (if it doesn't exist branch it from the SVN head revision)"
-    echo "                       finish <branchname> - merges <branchname> into '$MASTER', then svn-dcommits from there. finally <branchname> is tagged as 'archive/<branchname>' and deleted"
+    echo "                       finish [<branchname>] - merges <branchname> or the current branch into '$MASTER', then svn-dcommits from there. finally <branchname> is tagged as 'archive/<branchname>' and deleted"
 }
 
 main() {
