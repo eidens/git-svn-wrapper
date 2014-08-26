@@ -2,7 +2,7 @@ sing - a git-svn wrapper
 ========
 
 Provides wrappers for the git-svn workflow I've been using.
-Uses a local master branch to fetch from/dcommit to its upstream svn branch; avoids any non-fast-forward merges into master to preserve linear history (see the caveats section of git help svn).
+Uses a local master branch to fetch from/dcommit to its upstream svn branch; avoids any non-fast-forward merges into master to preserve linear history (see the [caveats section of the git-svn documentation](http://git-scm.com/docs/git-svn#_caveats)).
 
 
 Usage
@@ -26,4 +26,4 @@ fetch updates from svn, then rebase master on the svn head revision and the curr
 * updates feature/1 (see sing update)
 * merge feature/1 into master: guaranteed to be fast-forward, thereby preserving linear history
 * dcommit from master: with flag --interactive by default
-* if successful, archive feature/1 as the tag archive/feature/1, then delete it
+* if successful, archive feature/1 as the tag archive/feature/1, then delete feature/1
