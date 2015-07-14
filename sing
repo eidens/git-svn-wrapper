@@ -167,15 +167,11 @@ usage() {
 }
 
 main() {
-    # basic sanity checks: sing requires a subcommand
-    require_args "$@"
-    # must be in a git repo
-    if ! git rev-parse --git-dir >/dev/null 2>&1; then
-        die "error: Not a git repository"
-    fi
-
     # this is what the branch is called that all the git-svn-specific commands are executed on
     MASTER="master"
+
+    # basic sanity checks: sing requires a subcommand
+    require_args "$@"
 
     # save first subcommand and remove it from the given arguments
     SUBCOMMAND="$1"
@@ -185,6 +181,11 @@ main() {
     if test "$SUBCOMMAND" = "usage" || test "$SUBCOMMAND" = "help"; then
         usage
         exit 0
+    fi
+
+    # must be in a git repo
+    if ! git rev-parse --git-dir >/dev/null 2>&1; then
+        die "error: Not a git repository"
     fi
 
     # check if this is a sing-enabled repo
