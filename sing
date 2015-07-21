@@ -103,6 +103,7 @@ cmd_start() {
 
     checkout $NEW
 }
+
 cmd_finish() {
     if test $# -eq 0; then
         COMPLETE="$(current_branch)"
@@ -111,23 +112,13 @@ cmd_finish() {
         checkout $COMPLETE
     fi
 
-    # after this step MASTER (and therefore its corresponding SVN branch)
-    # are direct, linear ancestors of COMPLETE.
     cmd_update
 
-    if test "$COMPLETE" = "$MASTER"; then
-        # how to interpret 'finish MASTER'? it should not be deleted
-        # so just dcommit and do nothing else
-        svn_dcommit
-    else
+    # 'push' to upstream
+    svn_dcommit
+
+    if test "$COMPLETE" != "$MASTER"; then
         checkout $MASTER
-
-        # this is guaranteed to be a fast-forward merge:
-        # COMPLETE was just rebased onto MASTER
-        merge $COMPLETE
-
-        # 'push' to upstream
-        svn_dcommit
 
         # clean up and it's done
         cmd_cleanup $COMPLETE
