@@ -128,7 +128,7 @@ cmd_cleanup() {
         COMPLETE="$(current_branch)"
     fi
 
-    if test $COMPLETE -eq $MASTER; then
+    if test "$COMPLETE" = "$MASTER"; then
         die "cannot cleanup $MASTER: it's the master branch"
     fi
 
