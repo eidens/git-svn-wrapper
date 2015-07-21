@@ -118,8 +118,6 @@ cmd_finish() {
     svn_dcommit
 
     if test "$COMPLETE" != "$MASTER"; then
-        checkout $MASTER
-
         # clean up and it's done
         cmd_cleanup $COMPLETE
     fi
@@ -128,16 +126,14 @@ cmd_finish() {
 cmd_cleanup() {
     if test $# -eq 0; then
         COMPLETE="$(current_branch)"
-        # cant delete the branch youre currently on
-        checkout $MASTER
-    else
-        COMPLETE="$1"
-        checkout $COMPLETE
     fi
 
     if test $COMPLETE -eq $MASTER; then
         die "cannot cleanup $MASTER: it's the master branch"
     fi
+
+    # cant delete the branch youre currently on
+    checkout $MASTER
 
     archive $COMPLETE
     delete $COMPLETE
